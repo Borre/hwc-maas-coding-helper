@@ -1,0 +1,41 @@
+{
+  "name": "maas-coding-helper",
+  "version": "1.0.0",
+  "description": "CLI tool to use Huawei Cloud ModelArts MaaS as an OpenAI-compatible backend for coding tools",
+  "type": "module",
+  "bin": {
+    "maas-coding-helper": "./dist/index.js"
+  },
+  "main": "./dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": [
+    "maas",
+    "modelarts",
+    "huawei-cloud",
+    "openai",
+    "coding",
+    "cli"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "commander": "^12.1.0",
+    "dotenv": "^16.4.5",
+    "chalk": "^5.3.0",
+    "prompts": "^2.4.2",
+    "ora": "^8.0.1",
+    "yaml": "^2.4.1"
+  },
+  "devDependencies": {
+    "@types/node": "^20.14.0",
+    "@types/prompts": "^2.4.9",
+    "typescript": "^5.5.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
