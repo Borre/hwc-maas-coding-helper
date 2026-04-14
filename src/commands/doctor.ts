@@ -2,6 +2,7 @@ import type { DoctorOptions } from "../types.js";
 import { Logger } from "../utils/logger.js";
 import { detectEnvironment } from "../utils/detect.js";
 import { readGlobalConfig, readProjectEnv } from "../utils/env.js";
+import { envHelpText } from "../utils/shell.js";
 
 export async function runDoctor(options: DoctorOptions): Promise<void> {
   const logger = new Logger(options.verbose, options.json);
@@ -20,6 +21,7 @@ export async function runDoctor(options: DoctorOptions): Promise<void> {
   if (!hasProjectKey && !hasGlobalKey) {
     findings.push("Missing OPENAI_API_KEY in project and global config.");
     fixes.push("Run: npx maas-coding-helper init");
+    fixes.push(envHelpText("OPENAI_API_KEY", "<your_api_key>"));
   }
 
   if (!hasProjectUrl && !hasGlobalUrl) {

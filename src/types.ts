@@ -29,6 +29,7 @@ export interface InitOptions {
 export interface TestOptions {
   model?: string;
   region?: string;
+  baseUrl?: string;
   dryRun?: boolean;
   verbose?: boolean;
   json?: boolean;

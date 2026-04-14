@@ -8,6 +8,19 @@ Production-ready CLI to configure Huawei Cloud ModelArts MaaS (`glm-5.1`) as a d
 npx maas-coding-helper init
 ```
 
+## Cross-platform environment variable examples
+
+```bash
+# Linux/macOS (bash/zsh)
+export OPENAI_API_KEY='your_api_key'
+
+# Windows PowerShell
+$env:OPENAI_API_KEY='your_api_key'
+
+# Windows CMD
+set OPENAI_API_KEY="your_api_key"
+```
+
 ## What it configures
 
 - `OPENAI_API_KEY`
@@ -17,6 +30,7 @@ Priority order used by the CLI:
 1. CLI flags
 2. Project config (`.env`)
 3. Global config (`~/.maas/config.json`)
+4. Process environment (`OPENAI_API_KEY`, `OPENAI_BASE_URL`, `MAAS_API_KEY`)
 
 ## Commands
 
@@ -54,6 +68,7 @@ Validates auth, response shape, latency, and preview.
 ```bash
 npx maas-coding-helper test
 npx maas-coding-helper test --model glm-5.1 --region ap-southeast-1
+npx maas-coding-helper test --base-url http://127.0.0.1:18080/openai/v1
 ```
 
 ### `doctor`
@@ -121,8 +136,10 @@ src/
     node.ts
   utils/
     env.ts
+    shell.ts
     detect.ts
     fs.ts
     logger.ts
+  __tests__/
   types.ts
 ```
