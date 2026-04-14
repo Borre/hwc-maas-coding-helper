@@ -23,6 +23,35 @@ const GLOBAL_CONFIG_PATHS = [
   () => resolve(process.env.HOME || process.env.USERPROFILE || "~", ".config", "opencode", "config.json"),
 ];
 
+function backupPath(path: string): string {
+  const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
+  return `${path}.bak.${timestamp}`;
+}
+
+function parseOpenCodeConfig(path: string, content: string): Record<string, unknown> {
+  if (path.endsWith(".yaml") || path.endsWith(".yml")) {
+    return (YAML.parse(content) || {}) as Record<string, unknown>;
+  }
+
+  if (path.endsWith(".json")) {
+    return JSON.parse(content) as Record<string, unknown>;
+  }
+
+  // `.opencode` can be JSON or YAML depending on user setup.
+  try {
+    return JSON.parse(content) as Record<string, unknown>;
+  } catch {
+    return (YAML.parse(content) || {}) as Record<string, unknown>;
+  }
+}
+
+function stringifyOpenCodeConfig(path: string, data: Record<string, unknown>): string {
+  if (path.endsWith(".yaml") || path.endsWith(".yml")) {
+    return YAML.stringify(data);
+  }
+  return JSON.stringify(data, null, 2) + "\n";
+}
+
 export function findOpenCodeConfig(): string | null {
   const log = getLogger();
   for (const f of LOCAL_CONFIGS) {
@@ -63,26 +92,24 @@ export function configureOpenCode(config: MaasConfig): { path: string; created: 
 
   if (existingPath) {
     targetPath = existingPath;
-    let existing: any = {};
+    const content = readFileSync(existingPath, "utf-8");
+    let existing: Record<string, unknown>;
     try {
-      const content = readFileSync(existingPath, "utf-8");
-      if (existingPath.endsWith(".yaml") || existingPath.endsWith(".yml")) {
-        existing = YAML.parse(content) || {};
-      } else {
-        existing = JSON.parse(content);
-      }
-    } catch {}
+      existing = parseOpenCodeConfig(existingPath, content);
+    } catch (err: any) {
+      throw new Error(`Unable to parse OpenCode config at ${existingPath}: ${err.message || String(err)}`);
+    }
 
     existing.provider = opencodeConfig.provider;
     existing.model = opencodeConfig.model;
     existing.baseURL = opencodeConfig.baseURL;
     existing.apiKey = opencodeConfig.apiKey;
 
-    if (existingPath.endsWith(".yaml") || existingPath.endsWith(".yml")) {
-      writeFileSync(existingPath, YAML.stringify(existing), "utf-8");
-    } else {
-      writeFileSync(existingPath, JSON.stringify(existing, null, 2) + "\n", "utf-8");
-    }
+    const backup = backupPath(existingPath);
+    writeFileSync(backup, content, "utf-8");
+    log.debug(`Created OpenCode config backup: ${backup}`);
+
+    writeFileSync(existingPath, stringifyOpenCodeConfig(existingPath, existing), "utf-8");
     log.debug(`Updated existing OpenCode config: ${existingPath}`);
   } else {
     targetPath = resolve(process.cwd(), "opencode.json");

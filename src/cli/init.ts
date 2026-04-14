@@ -10,6 +10,19 @@ import { patchPythonEnv, generatePythonSnippet, suggestPythonPatch, detectPython
 import { patchNodeEnv, generateNodeSnippet, suggestNodePatch, detectNodeOpenAI } from "../integrations/node.js";
 import chalk from "chalk";
 
+function parseEndpointMode(mode: string | undefined): EndpointMode | null {
+  if (!mode) return null;
+  if (mode === "openai-compatible" || mode === "native") {
+    return mode;
+  }
+  return null;
+}
+
+function validateRegion(region: string | undefined): string | null {
+  if (!region) return null;
+  return region in REGIONS ? region : null;
+}
+
 export async function runInit(options: { verbose?: boolean; apiKey?: string; region?: string; mode?: string }) {
   const log = getLogger(options.verbose);
 
@@ -46,8 +59,22 @@ export async function runInit(options: { verbose?: boolean; apiKey?: string; reg
     getEnvVar("OPENAI_API_KEY") ||
     "";
 
-  const regionInput = options.region || defaults.region;
-  const modeInput = options.mode || defaults.endpointMode;
+  const validatedRegion = validateRegion(options.region);
+  if (options.region && !validatedRegion) {
+    log.error(`Unsupported region: ${options.region}`);
+    log.info(`Supported regions: ${Object.keys(REGIONS).join(", ")}`);
+    process.exit(1);
+  }
+
+  const validatedMode = parseEndpointMode(options.mode);
+  if (options.mode && !validatedMode) {
+    log.error(`Unsupported mode: ${options.mode}`);
+    log.info("Supported modes: openai-compatible, native");
+    process.exit(1);
+  }
+
+  const regionInput = validatedRegion || defaults.region;
+  const modeInput = validatedMode || defaults.endpointMode;
 
   const answers = await prompts(
     [
