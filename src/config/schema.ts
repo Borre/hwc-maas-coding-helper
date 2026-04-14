@@ -14,30 +14,16 @@ export interface MaasEndpoints {
 
 export const REGIONS: Record<string, string> = {
   "ap-southeast-1": "Asia Pacific (Singapore)",
-  "cn-north-1": "China (Beijing)",
-  "cn-north-4": "China (Beijing 4)",
-  "cn-east-2": "China (Shanghai)",
-  "cn-south-1": "China (Guangzhou)",
-  "cn-southwest-2": "China (Guiyang 1)",
-  "ap-southeast-2": "Asia Pacific (Bangkok)",
-  "ap-southeast-3": "Asia Pacific (Hong Kong)",
-  "eu-west-1": "Europe (Paris)",
-  "af-south-1": "Africa (Johannesburg)",
-  "la-north-2": "Latin America (Mexico City 2)",
-  "tr-west-1": "Turkey (Istanbul)",
 };
 
 export const MODELS: Record<string, { id: string; provider: string }> = {
+  "deepseek-v3.2": { id: "deepseek-v3.2", provider: "deepseek" },
+  "deepseek-v3.1-terminus": { id: "deepseek-v3.1-terminus", provider: "deepseek" },
+  "qwen3-32b": { id: "qwen3-32b", provider: "qwen" },
+  "DeepSeek-V3": { id: "DeepSeek-V3", provider: "deepseek" },
+  "glm-5": { id: "glm-5", provider: "zhipu" },
   "glm-5.1": { id: "glm-5.1", provider: "zhipu" },
-  "glm-4-plus": { id: "glm-4-plus", provider: "zhipu" },
-  "glm-4-long": { id: "glm-4-long", provider: "zhipu" },
-  "glm-4-flash": { id: "glm-4-flash", provider: "zhipu" },
-  "deepseek-v3": { id: "deepseek-v3", provider: "deepseek" },
-  "deepseek-r1": { id: "deepseek-r1", provider: "deepseek" },
-  "qwen2.5-72b": { id: "qwen2.5-72b-instruct", provider: "qwen" },
-  "qwen2.5-32b": { id: "qwen2.5-32b-instruct", provider: "qwen" },
-  "llama3.1-70b": { id: "llama3.1-70b", provider: "meta" },
-  "mistral-large": { id: "mistral-large", provider: "mistral" },
+  "deepseek-r1-250528": { id: "deepseek-r1-250528", provider: "deepseek" },
 };
 
 export function getEndpoints(region: string): MaasEndpoints {
