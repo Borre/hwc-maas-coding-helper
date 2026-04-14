@@ -2,12 +2,38 @@ import { existsSync, readFileSync, writeFileSync, mkdirSync } from "node:fs";
 import { resolve, dirname } from "node:path";
 import { getLogger } from "../utils/logger.js";
 import { getEndpoints, type MaasConfig } from "../config/schema.js";
+import YAML from "yaml";
 
 const LOCAL_CONFIGS = [".claude", ".claude.json", "claude.json"];
 const GLOBAL_CONFIG_PATHS = [
   () => resolve(process.env.HOME || process.env.USERPROFILE || "~", ".claude"),
   () => resolve(process.env.HOME || process.env.USERPROFILE || "~", ".config", "claude", "config.json"),
 ];
+
+function backupPath(path: string): string {
+  const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
+  return `${path}.bak.${timestamp}`;
+}
+
+function parseClaudeConfig(path: string, content: string): Record<string, unknown> {
+  if (path.endsWith(".json")) {
+    return JSON.parse(content) as Record<string, unknown>;
+  }
+
+  // `.claude` may be JSON or YAML depending on installation style.
+  try {
+    return JSON.parse(content) as Record<string, unknown>;
+  } catch {
+    return (YAML.parse(content) || {}) as Record<string, unknown>;
+  }
+}
+
+function stringifyClaudeConfig(path: string, data: Record<string, unknown>): string {
+  if (path.endsWith(".json")) {
+    return JSON.stringify(data, null, 2) + "\n";
+  }
+  return YAML.stringify(data);
+}
 
 export function findClaudeConfig(): string | null {
   const log = getLogger();
@@ -49,17 +75,24 @@ export function configureClaude(config: MaasConfig): { path: string; created: bo
 
   if (existingPath) {
     targetPath = existingPath;
-    let existing: any = {};
+    const content = readFileSync(existingPath, "utf-8");
+    let existing: Record<string, unknown>;
     try {
-      existing = JSON.parse(readFileSync(existingPath, "utf-8"));
-    } catch {}
+      existing = parseClaudeConfig(existingPath, content);
+    } catch (err: any) {
+      throw new Error(`Unable to parse Claude config at ${existingPath}: ${err.message || String(err)}`);
+    }
 
     existing.apiProvider = claudeConfig.apiProvider;
     existing.apiBaseUrl = claudeConfig.apiBaseUrl;
     existing.apiKey = claudeConfig.apiKey;
     existing.model = claudeConfig.model;
 
-    writeFileSync(existingPath, JSON.stringify(existing, null, 2) + "\n", "utf-8");
+    const backup = backupPath(existingPath);
+    writeFileSync(backup, content, "utf-8");
+    log.debug(`Created Claude config backup: ${backup}`);
+
+    writeFileSync(existingPath, stringifyClaudeConfig(existingPath, existing), "utf-8");
     log.debug(`Updated existing Claude Code config: ${existingPath}`);
   } else {
     targetPath = resolve(process.cwd(), ".claude.json");
