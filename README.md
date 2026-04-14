@@ -81,8 +81,8 @@ Switch the default model profile.
 
 ```bash
 maas-coding-helper use glm-5.1
-maas-coding-helper use deepseek-r1
-maas-coding-helper use qwen2.5-72b
+maas-coding-helper use deepseek-r1-250528
+maas-coding-helper use qwen3-32b
 ```
 
 Updates `.env` and process environment.
@@ -137,16 +137,13 @@ Sets `MAAS_API_KEY` and `MAAS_BASE_URL`. Use when you need the raw MaaS API.
 
 | Alias | Model ID | Provider |
 |---|---|---|
+| `deepseek-v3.2` | `deepseek-v3.2` | DeepSeek |
+| `deepseek-v3.1-terminus` | `deepseek-v3.1-terminus` | DeepSeek |
+| `qwen3-32b` | `qwen3-32b` | Qwen |
+| `DeepSeek-V3` | `DeepSeek-V3` | DeepSeek |
+| `glm-5` | `glm-5` | Zhipu |
 | `glm-5.1` | `glm-5.1` | Zhipu |
-| `glm-4-plus` | `glm-4-plus` | Zhipu |
-| `glm-4-long` | `glm-4-long` | Zhipu |
-| `glm-4-flash` | `glm-4-flash` | Zhipu |
-| `deepseek-v3` | `deepseek-v3` | DeepSeek |
-| `deepseek-r1` | `deepseek-r1` | DeepSeek |
-| `qwen2.5-72b` | `qwen2.5-72b-instruct` | Qwen |
-| `qwen2.5-32b` | `qwen2.5-32b-instruct` | Qwen |
-| `llama3.1-70b` | `llama3.1-70b` | Meta |
-| `mistral-large` | `mistral-large` | Mistral |
+| `deepseek-r1-250528` | `deepseek-r1-250528` | DeepSeek |
 
 ---
 
@@ -155,17 +152,6 @@ Sets `MAAS_API_KEY` and `MAAS_BASE_URL`. Use when you need the raw MaaS API.
 | Region ID | Location |
 |---|---|
 | `ap-southeast-1` | Asia Pacific (Singapore) |
-| `cn-north-1` | China (Beijing) |
-| `cn-north-4` | China (Beijing 4) |
-| `cn-east-2` | China (Shanghai) |
-| `cn-south-1` | China (Guangzhou) |
-| `cn-southwest-2` | China (Guiyang 1) |
-| `ap-southeast-2` | Asia Pacific (Bangkok) |
-| `ap-southeast-3` | Asia Pacific (Hong Kong) |
-| `eu-west-1` | Europe (Paris) |
-| `af-south-1` | Africa (Johannesburg) |
-| `la-north-2` | Latin America (Mexico City 2) |
-| `tr-west-1` | Turkey (Istanbul) |
 
 ---
 
@@ -306,7 +292,7 @@ npx maas-coding-helper init
 npx maas-coding-helper test
 
 # 3. Switch models anytime
-npx maas-coding-helper use deepseek-r1
+npx maas-coding-helper use deepseek-r1-250528
 
 # 4. Check status
 npx maas-coding-helper status
