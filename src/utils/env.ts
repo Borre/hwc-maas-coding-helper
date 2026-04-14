@@ -1,114 +1,97 @@
-import { readFileSync, writeFileSync, existsSync, appendFileSync, mkdirSync } from "node:fs";
 import { resolve } from "node:path";
-import { getLogger } from "./logger.js";
+import { readJsonIfExists, readTextIfExists, writeJson, writeTextFile } from "./fs.js";
+import type { EffectiveConfig } from "../types.js";
 
-const DOT_ENV = ".env";
-const GLOBAL_DIR = resolve(
-  process.env.HOME || process.env.USERPROFILE || "~",
-  ".maas"
-);
-const GLOBAL_CONFIG = resolve(GLOBAL_DIR, "config.json");
+const DEFAULT_REGION = "ap-southeast-1";
+const DEFAULT_MODEL = "glm-5.1";
 
-export interface EnvVars {
-  [key: string]: string;
+export function getDefaultRegion(): string {
+  return DEFAULT_REGION;
 }
 
-function parseEnv(content: string): EnvVars {
-  const vars: EnvVars = {};
+export function getDefaultModel(): string {
+  return DEFAULT_MODEL;
+}
+
+export function makeBaseUrl(region: string): string {
+  return `https://api-${region}.modelarts-maas.com/openai/v1`;
+}
+
+export function maskSecret(secret?: string): string {
+  if (!secret) return "<missing>";
+  if (secret.length <= 8) return "****";
+  return `${secret.slice(0, 4)}****${secret.slice(-4)}`;
+}
+
+export function projectEnvPath(cwd = process.cwd()): string {
+  return resolve(cwd, ".env");
+}
+
+export function globalConfigPath(): string {
+  const home = process.env.HOME || process.env.USERPROFILE || "~";
+  return resolve(home, ".maas", "config.json");
+}
+
+export function parseEnv(content?: string): Record<string, string> {
+  if (!content) return {};
+  const out: Record<string, string> = {};
   for (const line of content.split("\n")) {
     const trimmed = line.trim();
     if (!trimmed || trimmed.startsWith("#")) continue;
-    const eq = trimmed.indexOf("=");
-    if (eq === -1) continue;
-    const key = trimmed.slice(0, eq).trim();
-    const val = trimmed.slice(eq + 1).trim().replace(/^["']|["']$/g, "");
-    vars[key] = val;
+    const idx = trimmed.indexOf("=");
+    if (idx < 1) continue;
+    const key = trimmed.slice(0, idx).trim();
+    const value = trimmed.slice(idx + 1).trim().replace(/^['\"]|['\"]$/g, "");
+    out[key] = value;
   }
-  return vars;
+  return out;
 }
 
-function serializeEnv(vars: EnvVars): string {
-  return Object.entries(vars)
+export function stringifyEnv(values: Record<string, string>): string {
+  return Object.entries(values)
+    .sort(([a], [b]) => a.localeCompare(b))
     .map(([k, v]) => `${k}=${v}`)
-    .join("\n");
+    .join("\n") + "\n";
 }
 
-export function readEnvFile(path: string): EnvVars {
-  const log = getLogger();
-  if (!existsSync(path)) {
-    log.debug(`No .env at ${path}`);
-    return {};
-  }
-  const content = readFileSync(path, "utf-8");
-  return parseEnv(content);
+export function readProjectEnv(cwd = process.cwd()): Record<string, string> {
+  return parseEnv(readTextIfExists(projectEnvPath(cwd)));
 }
 
-export function writeEnvFile(path: string, vars: EnvVars) {
-  const log = getLogger();
-  const existing = readEnvFile(path);
-  const merged = { ...existing, ...vars };
-  const content = serializeEnv(merged) + "\n";
-  writeFileSync(path, content, "utf-8");
-  log.debug(`Wrote ${Object.keys(vars).length} vars to ${path}`);
+export function readGlobalConfig(): Record<string, string> {
+  return readJsonIfExists<Record<string, string>>(globalConfigPath()) ?? {};
 }
 
-export function appendToEnvFile(path: string, vars: EnvVars) {
-  const log = getLogger();
-  const existing = readEnvFile(path);
-  const toAdd: EnvVars = {};
-  for (const [k, v] of Object.entries(vars)) {
-    if (!(k in existing)) {
-      toAdd[k] = v;
-    } else if (existing[k] !== v) {
-      toAdd[k] = v;
-    }
-  }
-  if (Object.keys(toAdd).length === 0) {
-    log.debug(`All vars already present in ${path}`);
-    return;
-  }
-  const content = "\n" + serializeEnv(toAdd) + "\n";
-  appendFileSync(path, content, "utf-8");
-  log.debug(`Appended ${Object.keys(toAdd).length} vars to ${path}`);
+export function writeProjectEnv(nextValues: Record<string, string>, cwd = process.cwd()): Record<string, string> {
+  const current = readProjectEnv(cwd);
+  const merged = { ...current, ...nextValues };
+  writeTextFile(projectEnvPath(cwd), stringifyEnv(merged));
+  return merged;
 }
 
-export function readGlobalConfig(): EnvVars | null {
-  if (!existsSync(GLOBAL_CONFIG)) return null;
-  try {
-    return JSON.parse(readFileSync(GLOBAL_CONFIG, "utf-8"));
-  } catch {
-    return null;
-  }
+export function writeGlobalConfig(nextValues: Record<string, string>): Record<string, string> {
+  const current = readGlobalConfig();
+  const merged = { ...current, ...nextValues };
+  writeJson(globalConfigPath(), merged);
+  return merged;
 }
 
-export function writeGlobalConfig(vars: EnvVars) {
-  const log = getLogger();
-  const existing = readGlobalConfig() || {};
-  const merged = { ...existing, ...vars };
-  if (!existsSync(GLOBAL_DIR)) {
-    mkdirSync(GLOBAL_DIR, { recursive: true });
-  }
-  writeFileSync(GLOBAL_CONFIG, JSON.stringify(merged, null, 2), "utf-8");
-  log.debug(`Wrote global config to ${GLOBAL_CONFIG}`);
-}
+export function resolveEffectiveConfig(flags: {
+  apiKey?: string;
+  model?: string;
+  region?: string;
+}): EffectiveConfig {
+  const project = readProjectEnv();
+  const global = readGlobalConfig();
 
-export function maskKey(key: string): string {
-  if (key.length <= 8) return "****";
-  return key.slice(0, 4) + "****" + key.slice(-4);
-}
+  const region = flags.region || project.MAAS_REGION || global.MAAS_REGION || DEFAULT_REGION;
+  const model = flags.model || project.MAAS_MODEL || global.MAAS_MODEL || DEFAULT_MODEL;
+  const baseUrl = flags.region ? makeBaseUrl(flags.region) : project.OPENAI_BASE_URL || global.OPENAI_BASE_URL || makeBaseUrl(region);
+  const apiKey = flags.apiKey || project.OPENAI_API_KEY || global.OPENAI_API_KEY || process.env.OPENAI_API_KEY || process.env.MAAS_API_KEY;
 
-export function getEnvVar(name: string): string | undefined {
-  return process.env[name];
-}
+  const source: EffectiveConfig["source"] = flags.apiKey || flags.model || flags.region
+    ? "flags"
+    : (Object.keys(project).length > 0 ? "project" : (Object.keys(global).length > 0 ? "global" : "defaults"));
 
-export function setProcessEnv(vars: EnvVars) {
-  for (const [k, v] of Object.entries(vars)) {
-    process.env[k] = v;
-  }
+  return { apiKey, baseUrl, model, region, source };
 }
-
-export function getProjectEnvPath(): string {
-  return resolve(process.cwd(), DOT_ENV);
-}
-
-export { GLOBAL_DIR, GLOBAL_CONFIG };

@@ -1,125 +1,64 @@
-import { getEndpoints, getBaseUrl, type MaasConfig } from "../config/schema.js";
-import { maskKey, getEnvVar } from "../utils/env.js";
-import { getLogger } from "../utils/logger.js";
-
-export interface ChatMessage {
-  role: "system" | "user" | "assistant";
-  content: string;
-}
-
-export interface MaasResponse {
-  success: boolean;
-  content?: string;
-  model?: string;
-  usage?: {
-    prompt_tokens: number;
-    completion_tokens: number;
-    total_tokens: number;
-  };
-  latencyMs?: number;
+export interface MaaSTestResult {
+  ok: boolean;
+  status?: number;
+  latencyMs: number;
+  preview?: string;
   error?: string;
-  raw?: unknown;
 }
 
-export async function chatCompletion(
-  config: MaasConfig,
-  messages: ChatMessage[],
-  options?: { model?: string; maxTokens?: number }
-): Promise<MaasResponse> {
-  const log = getLogger();
-  const baseUrl = getBaseUrl(config);
-  const model = options?.model || config.defaultModel;
-
-  const isNative = config.endpointMode === "native";
-  const url = isNative ? baseUrl : `${baseUrl}/chat/completions`;
-
-  const body = {
-    model,
-    messages,
-    max_tokens: options?.maxTokens || 256,
-  };
-
-  log.debug(`POST ${url}`);
-  log.debug(`Model: ${model}`);
-  log.debug(`API Key: ${maskKey(config.apiKey)}`);
-
-  const start = Date.now();
-
+export async function testOpenAICompatible(input: {
+  apiKey: string;
+  baseUrl: string;
+  model: string;
+}): Promise<MaaSTestResult> {
+  const started = Date.now();
   try {
-    const response = await fetch(url, {
+    const res = await fetch(`${input.baseUrl}/chat/completions`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${config.apiKey}`,
+        Authorization: `Bearer ${input.apiKey}`,
       },
-      body: JSON.stringify(body),
+      body: JSON.stringify({
+        model: input.model,
+        messages: [{ role: "user", content: "Reply with: pong" }],
+        max_tokens: 24,
+      }),
     });
 
-    const latencyMs = Date.now() - start;
-    const raw = await response.json();
+    const latencyMs = Date.now() - started;
+    const data = (await res.json()) as Record<string, any>;
+    const preview = data?.choices?.[0]?.message?.content;
 
-    if (!response.ok) {
-      const errMsg =
-        (raw as any)?.error?.message ||
-        (raw as any)?.message ||
-        `HTTP ${response.status}`;
-      log.debug(`Error response: ${JSON.stringify(raw)}`);
+    if (!res.ok) {
       return {
-        success: false,
+        ok: false,
+        status: res.status,
         latencyMs,
-        error: errMsg,
-        raw,
+        error: data?.error?.message || `HTTP ${res.status}`,
       };
     }
 
-    const choice = (raw as any)?.choices?.[0];
-    const content = choice?.message?.content || "";
-    const usage = (raw as any)?.usage;
+    if (!Array.isArray(data?.choices)) {
+      return {
+        ok: false,
+        status: res.status,
+        latencyMs,
+        error: "Response missing choices[]",
+      };
+    }
 
     return {
-      success: true,
-      content,
-      model: (raw as any)?.model || model,
-      usage: usage
-        ? {
-            prompt_tokens: usage.prompt_tokens || 0,
-            completion_tokens: usage.completion_tokens || 0,
-            total_tokens: usage.total_tokens || 0,
-          }
-        : undefined,
+      ok: true,
+      status: res.status,
       latencyMs,
-      raw,
+      preview: typeof preview === "string" ? preview.slice(0, 120) : "",
     };
-  } catch (err: any) {
-    const latencyMs = Date.now() - start;
+  } catch (error) {
     return {
-      success: false,
-      latencyMs,
-      error: err.message || String(err),
+      ok: false,
+      latencyMs: Date.now() - started,
+      error: error instanceof Error ? error.message : String(error),
     };
   }
-}
-
-export async function validateApiKey(
-  config: MaasConfig
-): Promise<{ valid: boolean; error?: string }> {
-  const result = await chatCompletion(
-    config,
-    [{ role: "user", content: "ping" }],
-    { maxTokens: 8 }
-  );
-
-  if (result.success) {
-    return { valid: true };
-  }
-
-  return { valid: false, error: result.error };
-}
-
-export function resolveApiKey(explicit?: string): string | undefined {
-  return (
-    explicit ||
-    getEnvVar("MAAS_API_KEY") ||
-    getEnvVar("OPENAI_API_KEY")
-  );
 }

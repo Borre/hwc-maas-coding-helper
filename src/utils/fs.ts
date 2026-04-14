@@ -1,69 +1,41 @@
-import {
-  existsSync,
-  readFileSync,
-  writeFileSync,
-  mkdirSync,
-} from "node:fs";
-import { resolve, dirname } from "node:path";
-import { getLogger } from "./logger.js";
+import { existsSync, mkdirSync, readFileSync, writeFileSync, copyFileSync } from "node:fs";
+import { dirname } from "node:path";
 
-export function ensureFile(path: string, content: string) {
-  const log = getLogger();
-  const dir = dirname(path);
-  if (!existsSync(dir)) {
-    mkdirSync(dir, { recursive: true });
-    log.debug(`Created directory: ${dir}`);
-  }
-  if (!existsSync(path)) {
-    writeFileSync(path, content, "utf-8");
-    log.debug(`Created file: ${path}`);
-    return true;
-  }
-  return false;
+export function pathExists(path: string): boolean {
+  return existsSync(path);
 }
 
-export function readJsonFile<T = unknown>(path: string): T | null {
-  if (!existsSync(path)) return null;
-  try {
-    return JSON.parse(readFileSync(path, "utf-8")) as T;
-  } catch {
-    return null;
-  }
-}
-
-export function writeJsonFile(path: string, data: unknown) {
-  const log = getLogger();
+export function ensureDirForFile(path: string): void {
   const dir = dirname(path);
   if (!existsSync(dir)) {
     mkdirSync(dir, { recursive: true });
   }
-  writeFileSync(path, JSON.stringify(data, null, 2) + "\n", "utf-8");
-  log.debug(`Wrote JSON to ${path}`);
 }
 
-export function mergeJsonFile(path: string, data: Record<string, unknown>) {
-  const log = getLogger();
-  const existing = readJsonFile<Record<string, unknown>>(path) || {};
-  const merged = { ...existing, ...data };
-  writeJsonFile(path, merged);
-  log.debug(`Merged JSON into ${path}`);
+export function readTextIfExists(path: string): string | undefined {
+  if (!existsSync(path)) return undefined;
+  return readFileSync(path, "utf8");
 }
 
-export function fileExists(path: string): boolean {
-  return existsSync(resolve(path));
+export function backupFile(path: string): string | undefined {
+  if (!existsSync(path)) return undefined;
+  const stamp = new Date().toISOString().replace(/[:.]/g, "-");
+  const backupPath = `${path}.bak.${stamp}`;
+  copyFileSync(path, backupPath);
+  return backupPath;
 }
 
-export function readFile(path: string): string | null {
-  if (!existsSync(path)) return null;
-  return readFileSync(path, "utf-8");
+export function writeTextFile(path: string, content: string): void {
+  ensureDirForFile(path);
+  writeFileSync(path, content, "utf8");
 }
 
-export function writeFile(path: string, content: string) {
-  const log = getLogger();
-  const dir = dirname(path);
-  if (!existsSync(dir)) {
-    mkdirSync(dir, { recursive: true });
-  }
-  writeFileSync(path, content, "utf-8");
-  log.debug(`Wrote file: ${path}`);
+export function readJsonIfExists<T>(path: string): T | undefined {
+  const raw = readTextIfExists(path);
+  if (!raw) return undefined;
+  return JSON.parse(raw) as T;
+}
+
+export function writeJson(path: string, data: unknown): void {
+  writeTextFile(path, `${JSON.stringify(data, null, 2)}\n`);
 }
