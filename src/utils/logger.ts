@@ -1,55 +1,23 @@
 import chalk from "chalk";
 
 export class Logger {
-  verbose: boolean;
+  constructor(private readonly verbose = false, private readonly json = false) {}
 
-  constructor(verbose = false) {
-    this.verbose = verbose;
-  }
-
-  info(msg: string) {
-    console.log(chalk.blue("ℹ") + " " + msg);
-  }
-
-  success(msg: string) {
-    console.log(chalk.green("✔") + " " + msg);
-  }
-
-  warn(msg: string) {
-    console.log(chalk.yellow("⚠") + " " + msg);
-  }
-
-  error(msg: string) {
-    console.log(chalk.red("✖") + " " + msg);
-  }
-
-  debug(msg: string) {
-    if (this.verbose) {
-      console.log(chalk.gray("…") + " " + chalk.gray(msg));
+  private emit(level: string, message: string, extra?: Record<string, unknown>): void {
+    if (this.json) {
+      console.log(JSON.stringify({ level, message, ...extra }));
+      return;
     }
+    const color = level === "error" ? chalk.red : level === "warn" ? chalk.yellow : level === "success" ? chalk.green : chalk.cyan;
+    const prefix = level === "error" ? "✖" : level === "warn" ? "⚠" : level === "success" ? "✔" : "•";
+    console.log(`${color(prefix)} ${message}`);
   }
 
-  step(msg: string) {
-    console.log(chalk.cyan("▸") + " " + msg);
+  info(message: string, extra?: Record<string, unknown>): void { this.emit("info", message, extra); }
+  success(message: string, extra?: Record<string, unknown>): void { this.emit("success", message, extra); }
+  warn(message: string, extra?: Record<string, unknown>): void { this.emit("warn", message, extra); }
+  error(message: string, extra?: Record<string, unknown>): void { this.emit("error", message, extra); }
+  debug(message: string, extra?: Record<string, unknown>): void {
+    if (this.verbose) this.emit("debug", message, extra);
   }
-
-  blank() {
-    console.log();
-  }
-
-  table(data: Record<string, string>) {
-    const maxKey = Math.max(...Object.keys(data).map((k) => k.length));
-    for (const [k, v] of Object.entries(data)) {
-      console.log(chalk.gray("  " + k.padEnd(maxKey + 2)) + v);
-    }
-  }
-}
-
-let logger: Logger;
-
-export function getLogger(verbose?: boolean): Logger {
-  if (!logger || verbose !== undefined) {
-    logger = new Logger(verbose);
-  }
-  return logger;
 }

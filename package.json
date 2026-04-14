@@ -4,7 +4,7 @@
   "description": "CLI tool to use Huawei Cloud ModelArts MaaS as an OpenAI-compatible backend for coding tools",
   "type": "module",
   "bin": {
-    "maas-coding-helper": "./dist/index.js"
+    "maas-coding-helper": "./dist/cli.js"
   },
   "main": "./dist/index.js",
   "scripts": {
