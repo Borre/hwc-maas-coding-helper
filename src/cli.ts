@@ -42,6 +42,7 @@ program
   .description("Test MaaS OpenAI-compatible endpoint")
   .option("--model <model>")
   .option("--region <region>")
+  .option("--base-url <baseUrl>", "override OpenAI-compatible base URL")
   .action(async (commandOpts) => {
     const opts = program.opts<{ dryRun?: boolean; verbose?: boolean; json?: boolean }>();
     await runTest({ ...commandOpts, ...opts });

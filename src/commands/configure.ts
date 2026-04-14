@@ -1,5 +1,6 @@
 import type { ConfigureOptions } from "../types.js";
 import { Logger } from "../utils/logger.js";
+import { envHelpText } from "../utils/shell.js";
 import { makeBaseUrl, readGlobalConfig, readProjectEnv, writeGlobalConfig, writeProjectEnv } from "../utils/env.js";
 import { configureOpenCodeSafe } from "../integrations/opencode.js";
 import { configureClaudeSafe } from "../integrations/claude.js";
@@ -17,6 +18,7 @@ export async function runConfigure(options: ConfigureOptions): Promise<void> {
 
   if (!apiKey) {
     logger.error("Missing API key. Provide --api-key or set MAAS_API_KEY / OPENAI_API_KEY.");
+    logger.info(envHelpText("OPENAI_API_KEY", "<your_api_key>"));
     process.exitCode = 1;
     return;
   }

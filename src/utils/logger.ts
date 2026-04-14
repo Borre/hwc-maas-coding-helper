@@ -8,9 +8,19 @@ export class Logger {
       console.log(JSON.stringify({ level, message, ...extra }));
       return;
     }
-    const color = level === "error" ? chalk.red : level === "warn" ? chalk.yellow : level === "success" ? chalk.green : chalk.cyan;
+
+    const canColor = Boolean(process.stdout.isTTY) && !process.env.NO_COLOR;
+    const palette = {
+      error: chalk.red,
+      warn: chalk.yellow,
+      success: chalk.green,
+      info: chalk.cyan,
+      debug: chalk.gray,
+    } as const;
+
     const prefix = level === "error" ? "✖" : level === "warn" ? "⚠" : level === "success" ? "✔" : "•";
-    console.log(`${color(prefix)} ${message}`);
+    const colorizedPrefix = canColor ? (palette[level as keyof typeof palette] ?? chalk.cyan)(prefix) : prefix;
+    console.log(`${colorizedPrefix} ${message}`);
   }
 
   info(message: string, extra?: Record<string, unknown>): void { this.emit("info", message, extra); }

@@ -5,7 +5,7 @@ import { testOpenAICompatible } from "../providers/maas.js";
 
 export async function runTest(options: TestOptions): Promise<void> {
   const logger = new Logger(options.verbose, options.json);
-  const effective = resolveEffectiveConfig({ model: options.model, region: options.region });
+  const effective = resolveEffectiveConfig({ model: options.model, region: options.region, baseUrl: options.baseUrl });
 
   if (!effective.apiKey) {
     logger.error("No API key resolved. Run init/configure first.");
