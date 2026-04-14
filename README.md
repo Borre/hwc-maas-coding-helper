@@ -20,6 +20,46 @@ OpenCode and Claude Code use `glm-5.1` via MaaS automatically.
 
 ---
 
+## Start Here (Beginner Friendly)
+
+If your main goal is to quickly connect MaaS to coding assistants, use one of these paths:
+
+### Claude Code (Recommended)
+
+```bash
+# 1) Initialize MaaS in your current project
+npx maas-coding-helper init
+
+# 2) Verify connectivity
+npx maas-coding-helper test
+
+# 3) Confirm active config
+npx maas-coding-helper status
+```
+
+Expected result:
+- `.claude.json` is created/updated for OpenAI-compatible MaaS usage
+- `status` shows API key (masked), region, mode, model, and endpoint URLs
+
+### OpenCode
+
+```bash
+# 1) Initialize MaaS in your current project
+npx maas-coding-helper init
+
+# 2) Verify connectivity
+npx maas-coding-helper test
+
+# 3) Confirm active config
+npx maas-coding-helper status
+```
+
+Expected result:
+- `opencode.json` is created/updated for MaaS
+- `status` confirms your active model and endpoint configuration
+
+---
+
 ## Install
 
 ```bash
@@ -229,6 +269,59 @@ export OPENAI_BASE_URL="https://api-ap-southeast-1.modelarts-maas.com/openai/v1"
 ```
 
 Then use any tool that speaks the OpenAI protocol — curl, LiteLLM, LangChain, etc.
+
+---
+
+## Troubleshooting (Plain Language)
+
+### `status` says “No API key configured”
+
+Run setup again:
+
+```bash
+maas-coding-helper init
+```
+
+Then verify:
+
+```bash
+maas-coding-helper status
+```
+
+### `test` fails with auth errors
+
+- Re-run `init` and paste your MaaS API key carefully
+- Confirm region and endpoint mode are correct for your account
+- Retry:
+
+```bash
+maas-coding-helper test
+maas-coding-helper test --native
+```
+
+### Claude Code/OpenCode still not using MaaS
+
+1. Run:
+   ```bash
+   maas-coding-helper status
+   ```
+2. Confirm mode is `openai-compatible`
+3. Re-run:
+   ```bash
+   maas-coding-helper init
+   ```
+4. Restart your editor/terminal session
+
+### Safety tip before first run
+
+If you already have custom Claude/OpenCode config files, back them up before running `init`:
+
+```bash
+cp .claude.json .claude.json.bak 2>/dev/null || true
+cp opencode.json opencode.json.bak 2>/dev/null || true
+```
+
+This gives you a fast rollback path if you need to restore previous settings.
 
 ---
 
