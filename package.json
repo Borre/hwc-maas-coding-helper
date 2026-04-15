@@ -11,7 +11,7 @@
     "build": "tsc",
     "dev": "tsc --watch",
     "prepublishOnly": "npm run build",
-    "test": "npm run build && node --test \"dist/__tests__/**/*.test.js\"",
+    "test": "npm run build && node --test dist/__tests__/config.test.js dist/__tests__/env.test.js dist/__tests__/integration.test.js",
     "test:smoke": "npm run build && node scripts/smoke-test.mjs"
   },
   "keywords": [
