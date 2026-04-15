@@ -17,7 +17,7 @@ program
 
 program
   .command("init")
-  .description("Interactive setup")
+  .description("Launch interactive setup to configure MaaS API key, region, and model")
   .action(async () => {
     const opts = program.opts<{ dryRun?: boolean; verbose?: boolean; json?: boolean }>();
     await runInit(opts);
@@ -25,13 +25,13 @@ program
 
 program
   .command("configure")
-  .description("Non-interactive configuration")
-  .requiredOption("--tool <tool>", "opencode|claude|generic")
-  .option("--model <model>", "model id")
-  .option("--region <region>", "region id")
-  .option("--api-key <apiKey>", "MaaS API key")
-  .option("--project", "write to .env")
-  .option("--global", "write to ~/.maas/config.json")
+  .description("Non-interactive configuration for CI/CD or scripts")
+  .requiredOption("--tool <tool>", "Target tool (opencode|claude|generic)")
+  .option("--model <model>", "MaaS model ID (e.g., glm-5.1)")
+  .option("--region <region>", "MaaS region ID (e.g., ap-southeast-1)")
+  .option("--api-key <apiKey>", "Huawei Cloud MaaS API key")
+  .option("--project", "Write configuration to local .env file")
+  .option("--global", "Write configuration to global ~/.maas/config.json")
   .action(async (commandOpts) => {
     const opts = program.opts<{ dryRun?: boolean; verbose?: boolean; json?: boolean }>();
     await runConfigure({ ...commandOpts, ...opts });
@@ -39,13 +39,14 @@ program
 
 program
   .command("test")
-  .description("Test MaaS OpenAI-compatible endpoint")
-  .option("--model <model>")
-  .option("--region <region>")
-  .option("--base-url <baseUrl>", "override OpenAI-compatible base URL")
+  .description("Verify connectivity and configuration with a MaaS API call")
+  .option("--model <model>", "Model ID to test")
+  .option("--region <region>", "Region ID to test")
+  .option("--base-url <baseUrl>", "Override OpenAI-compatible base URL for testing")
+  .option("--native", "Test the Huawei Cloud native endpoint instead of OpenAI-compatible")
   .action(async (commandOpts) => {
     const opts = program.opts<{ dryRun?: boolean; verbose?: boolean; json?: boolean }>();
-    await runTest({ ...commandOpts, ...opts });
+    await runTest({ ...commandOpts, ...opts, native: Boolean(commandOpts.native) });
   });
 
 program

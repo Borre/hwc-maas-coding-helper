@@ -2,10 +2,26 @@
 
 Production-ready CLI to configure Huawei Cloud ModelArts MaaS (`glm-5.1`) as a drop-in OpenAI-compatible backend.
 
+## Prerequisites
+
+Before using this CLI, ensure you have:
+1.  **Huawei Cloud Account**: [Sign up here](https://www.huaweicloud.com/).
+2.  **MaaS API Key**: Obtain your API key from the [ModelArts MaaS console](https://console.huaweicloud.com/maas/).
+3.  **Node.js**: Version 18 or higher.
+
 ## Install / Run
+
+You can run the CLI directly using `npx`:
 
 ```bash
 npx maas-coding-helper init
+```
+
+Or install it globally:
+
+```bash
+npm install -g hwc-maas-coding-helper
+maas-coding-helper init
 ```
 
 ## Cross-platform environment variable examples
@@ -63,13 +79,20 @@ Flags:
 - `--json`
 
 ### `test`
-Validates auth, response shape, latency, and preview.
+Validates auth, response shape, latency, and preview. Supports both OpenAI-compatible and native endpoints.
 
 ```bash
 npx maas-coding-helper test
 npx maas-coding-helper test --model glm-5.1 --region ap-southeast-1
+npx maas-coding-helper test --native
 npx maas-coding-helper test --base-url http://127.0.0.1:18080/openai/v1
 ```
+
+Flags:
+- `--model <model>`
+- `--region <region>`
+- `--base-url <url>` (OpenAI-compatible only)
+- `--native` (Test native endpoint instead of OpenAI-compatible)
 
 ### `doctor`
 Detects missing env vars, conflicts, and partial setup with actionable fixes.
@@ -110,6 +133,19 @@ const client = new OpenAI({
   baseURL: process.env.OPENAI_BASE_URL,
 });
 ```
+
+## Troubleshooting
+
+### Connectivity Issues
+If the `test` command fails:
+1.  **Check API Key**: Ensure your API key is active.
+2.  **Verify Region**: Make sure the model you are using is available in the selected region.
+3.  **Network Check**: Run `maas-coding-helper test --native` to see if the underlying Huawei Cloud endpoint is reachable.
+4.  **Doctor Command**: Run `maas-coding-helper doctor` to detect configuration conflicts.
+
+### Integration Failures
+- **OpenCode**: If your `opencode.json` is not updated, ensure you are running the command in the project root.
+- **Claude Code**: Check if `.claude.json` exists; the CLI will only update it if it's already present.
 
 ## Security
 

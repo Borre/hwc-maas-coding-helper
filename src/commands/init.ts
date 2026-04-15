@@ -7,6 +7,7 @@ import { runConfigure } from "./configure.js";
 import { runTest } from "./test.js";
 import { pythonSuggestion } from "../integrations/python.js";
 import { nodeSuggestion } from "../integrations/node.js";
+import { MODELS, REGIONS } from "../config/schema.js";
 
 export async function runInit(options: InitOptions): Promise<void> {
   const logger = new Logger(options.verbose, options.json);
@@ -14,24 +15,36 @@ export async function runInit(options: InitOptions): Promise<void> {
 
   logger.info(`Environment detected: ${detected.foundFiles.join(", ") || "none"}`);
 
+  const regionChoices = Object.entries(REGIONS).map(([id, name]) => ({
+    title: `${name} (${id})`,
+    value: id,
+  }));
+
+  const modelChoices = Object.entries(MODELS).map(([id, info]) => ({
+    title: `${id} (${info.provider})`,
+    value: id,
+  }));
+
   const answers = await prompts([
     {
       type: "password",
       name: "apiKey",
       message: "MaaS API key",
-      validate: (value: string) => value.trim().length > 0 ? true : "API key required",
+      validate: (value: string) => (value.trim().length > 0 ? true : "API key required"),
     },
     {
-      type: "text",
+      type: "select",
       name: "region",
       message: "Region",
-      initial: getDefaultRegion(),
+      choices: regionChoices,
+      initial: regionChoices.findIndex((c) => c.value === getDefaultRegion()) || 0,
     },
     {
-      type: "text",
+      type: "select",
       name: "model",
       message: "Model",
-      initial: getDefaultModel(),
+      choices: modelChoices,
+      initial: modelChoices.findIndex((c) => c.value === getDefaultModel()) || 0,
     },
     {
       type: "select",
@@ -55,6 +68,12 @@ export async function runInit(options: InitOptions): Promise<void> {
       initial: 0,
     },
   ]);
+
+  if (!answers.apiKey || !answers.region || !answers.model) {
+    logger.error("Init cancelled or incomplete.");
+    process.exitCode = 1;
+    return;
+  }
 
   await runConfigure({
     tool: answers.tool,

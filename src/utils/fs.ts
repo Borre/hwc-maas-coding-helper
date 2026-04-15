@@ -1,5 +1,5 @@
-import { existsSync, mkdirSync, readFileSync, writeFileSync, copyFileSync } from "node:fs";
-import { dirname } from "node:path";
+import { existsSync, mkdirSync, readFileSync, writeFileSync, copyFileSync, renameSync } from "node:fs";
+import { dirname, join } from "node:path";
 
 export function pathExists(path: string): boolean {
   return existsSync(path);
@@ -25,9 +25,15 @@ export function backupFile(path: string): string | undefined {
   return backupPath;
 }
 
-export function writeTextFile(path: string, content: string): void {
+export function atomicWriteFile(path: string, content: string): void {
   ensureDirForFile(path);
-  writeFileSync(path, content, "utf8");
+  const tmpPath = `${path}.tmp.${Math.random().toString(36).slice(2)}`;
+  writeFileSync(tmpPath, content, "utf8");
+  renameSync(tmpPath, path);
+}
+
+export function writeTextFile(path: string, content: string): void {
+  atomicWriteFile(path, content);
 }
 
 export function readJsonIfExists<T>(path: string): T | undefined {
