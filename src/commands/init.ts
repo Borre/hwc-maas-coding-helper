@@ -21,7 +21,7 @@ export async function runInit(options: InitOptions): Promise<void> {
   }));
 
   const modelChoices = Object.entries(MODELS).map(([id, info]) => ({
-    title: `${id} (${info.provider})`,
+    title: `${info.name} (${info.provider})`,
     value: id,
   }));
 

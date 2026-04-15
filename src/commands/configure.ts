@@ -41,7 +41,7 @@ export async function runConfigure(options: ConfigureOptions): Promise<void> {
   }
 
   if (options.tool === "opencode") {
-    const outcome = configureOpenCodeSafe({ model, baseUrl, dryRun: options.dryRun });
+    const outcome = configureOpenCodeSafe({ model, baseUrl, apiKey, dryRun: options.dryRun });
     outcome.updated ? logger.success(outcome.note) : logger.warn(outcome.note);
   } else if (options.tool === "claude") {
     const outcome = configureClaudeSafe({ model, baseUrl, dryRun: options.dryRun });

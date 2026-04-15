@@ -8,10 +8,17 @@ export const REGIONS: Record<string, string> = {
 
 /**
  * Supported models and their metadata.
- * Model ID -> Provider & ID.
+ * Model ID -> Provider & display name.
  */
-export const MODELS: Record<string, { id: string; provider: string }> = {
-  "glm-5.1": { id: "glm-5.1", provider: "zhipu" },
+export const MODELS: Record<string, { id: string; provider: string; name: string }> = {
+  "glm-5.1": { id: "glm-5.1", provider: "zhipu", name: "GLM 5.1" },
+  "glm-4.6": { id: "glm-4.6", provider: "zhipu", name: "GLM 4.6" },
+  "glm-4.5": { id: "glm-4.5", provider: "zhipu", name: "GLM 4.5" },
+  "deepseek-r1": { id: "deepseek-r1", provider: "deepseek", name: "DeepSeek R1" },
+  "deepseek-v3": { id: "deepseek-v3", provider: "deepseek", name: "DeepSeek V3" },
+  "qwen3-235b-a22b": { id: "qwen3-235b-a22b", provider: "qwen", name: "Qwen3 235B-A22B" },
+  "qwen3-32b": { id: "qwen3-32b", provider: "qwen", name: "Qwen3 32B" },
+  "qwen2.5-72b": { id: "qwen2.5-72b", provider: "qwen", name: "Qwen2.5 72B" },
 };
 
 /**
