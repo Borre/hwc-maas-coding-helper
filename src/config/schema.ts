@@ -9,16 +9,16 @@ export const REGIONS: Record<string, string> = {
 /**
  * Supported models and their metadata.
  * Model ID -> Provider & display name.
+ * Updated 2026-04-16 to match current MaaS API availability.
  */
 export const MODELS: Record<string, { id: string; provider: string; name: string }> = {
   "glm-5.1": { id: "glm-5.1", provider: "zhipu", name: "GLM 5.1" },
-  "glm-4.6": { id: "glm-4.6", provider: "zhipu", name: "GLM 4.6" },
-  "glm-4.5": { id: "glm-4.5", provider: "zhipu", name: "GLM 4.5" },
-  "deepseek-r1": { id: "deepseek-r1", provider: "deepseek", name: "DeepSeek R1" },
-  "deepseek-v3": { id: "deepseek-v3", provider: "deepseek", name: "DeepSeek V3" },
-  "qwen3-235b-a22b": { id: "qwen3-235b-a22b", provider: "qwen", name: "Qwen3 235B-A22B" },
+  "glm-5": { id: "glm-5", provider: "zhipu", name: "GLM 5" },
+  "DeepSeek-V3": { id: "DeepSeek-V3", provider: "deepseek", name: "DeepSeek V3" },
+  "deepseek-v3.2": { id: "deepseek-v3.2", provider: "deepseek", name: "DeepSeek V3.2" },
+  "deepseek-v3.1-terminus": { id: "deepseek-v3.1-terminus", provider: "deepseek", name: "DeepSeek V3.1 Terminus" },
+  "deepseek-r1-250528": { id: "deepseek-r1-250528", provider: "deepseek", name: "DeepSeek R1 250528" },
   "qwen3-32b": { id: "qwen3-32b", provider: "qwen", name: "Qwen3 32B" },
-  "qwen2.5-72b": { id: "qwen2.5-72b", provider: "qwen", name: "Qwen2.5 72B" },
 };
 
 /**
